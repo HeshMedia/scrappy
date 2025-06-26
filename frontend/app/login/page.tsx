@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +10,21 @@ import { Label } from "@/components/ui/label"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import TextPressure from "@/components/TextPressure"
+
+// Client-only wrapper to prevent hydration issues with form inputs
+function ClientOnlyForm({ children }: { children: React.ReactNode }) {
+  const [hasMounted, setHasMounted] = useState(false)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  if (!hasMounted) {
+    return <div className="w-[350px] h-[300px] bg-gray-50 rounded-lg animate-pulse border"></div>
+  }
+
+  return <>{children}</>
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -50,6 +64,7 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
+
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-white">
       {/* SCRAPPY title centered on page */}
@@ -68,40 +83,42 @@ export default function LoginPage() {
       </div>
       
       {/* Login card */}
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardDescription></CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+      <ClientOnlyForm>
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardDescription></CardDescription>
+          </CardHeader>
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </ClientOnlyForm>
     </div>
   )
 }
